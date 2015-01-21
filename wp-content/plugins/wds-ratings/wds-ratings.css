@@ -1,0 +1,71 @@
+body {
+  padding: 100px;
+}
+
+.stars-ratings {
+  font-size: 550%;
+  position: relative;
+  margin: 0 auto;
+  width: 5em;
+  height: 1em;
+  overflow: hidden;
+  background: #eee;
+  padding: 80px;
+}
+
+.stars-inner-wrap > div {
+  position: relative;
+}
+
+.stars {
+  display: block;
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 0;
+  color: #fff;
+  cursor: pointer;
+}
+
+span:last-of-type {
+  text-shadow: #333 .02em .02em .1em;
+}
+
+.stars.active, .stars.current-rating.active {
+  color: #ffdf00;
+}
+
+.stars.current-rating {
+  color: #feff99;
+}
+
+.user-current-rating {
+  color: #4285f4;
+}
+
+.stars span {
+  position: relative;
+  line-height: 1;
+  height: 100%;
+}
+
+.percent:before {
+  text-shadow: none;
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  line-height: 1.15em;
+  content: '\2605';
+  width: 30%;
+  overflow: hidden;
+  color: #feff99;
+}
+
+.has-user-rating .percent:before {
+  color: #4285f4;
+}
+
+.active .percent:before {
+  display: none;
+}
