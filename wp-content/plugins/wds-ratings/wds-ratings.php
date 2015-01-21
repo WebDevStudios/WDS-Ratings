@@ -355,7 +355,7 @@ class WDS_Ratings {
 $GLOBALS['wds_ratings'] = new WDS_Ratings();
 $GLOBALS['wds_ratings']->hooks();
 
-function do_ratings( $echo = true ) {
+function post_ratings( $echo = true ) {
 	global $wds_ratings;
 	
 	$ratings = $wds_ratings->fetch_ratings_template();

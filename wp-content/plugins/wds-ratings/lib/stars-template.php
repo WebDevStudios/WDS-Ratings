@@ -1,7 +1,7 @@
 <!-- data-rating is the saved rating -->
 <div id="star-rating-<?php echo isset( $post_id ) ? $post_id : 0; ?>" 
 	class="stars-ratings" 
-	data-rating="<?php echo isset( $post_rating ) ? $post_rating : 0; ?>"
+	data-rating="<?php echo isset( $post_rating ) ? $post_rating : 0; ?>" 
 	<?php echo isset( $user_rating ) ? 'data-userrating="'.$user_rating.'"' : ''; ?>>
 		
 	<div class="stars-inner-wrap">
