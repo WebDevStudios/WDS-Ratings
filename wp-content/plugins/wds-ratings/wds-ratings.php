@@ -98,7 +98,7 @@ class WDS_Ratings {
 	public function do_wds_ratings() {
 		if ( $this->is_allowed_on_post() ) {
 			// CSS
-			wp_enqueue_style( 'wds-ratings', self::$url . 'wds-ratings.css' );
+			//wp_enqueue_style( 'wds-ratings', self::$url . 'wds-ratings.css' );
 			
 			// JS
 			wp_enqueue_script( 'wds-ratings', self::$url . 'wds-ratings.js', array( 'jquery' ) );
