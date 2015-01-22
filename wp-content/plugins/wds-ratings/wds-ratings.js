@@ -4,7 +4,7 @@ var StarRatings = (function(window, document, $, undefined){
 	var app = { $stars : {}, $currRating : null };
 
 	app.init = function() {
-		$.extend( app, wds_ratings_config );
+		$.extend( app, wds_ratings_config ); 
 		
 		$( '.stars-ratings' )
 			.each( app.handleRatingForSection )
@@ -77,6 +77,8 @@ var StarRatings = (function(window, document, $, undefined){
 		app.$currRating = $this.parents( '.stars-ratings' );
 		var id = app.$currRating.attr( 'id' );
 		
+		app.post_id = app.$currRating.data( 'post_id' );;
+		
 		var data = {
 			'action' : 'wds_ratings_post_user_rating',
 			'nonce' : app.nonce,
@@ -101,8 +103,6 @@ var StarRatings = (function(window, document, $, undefined){
 					app.handleRating( userRating, id, true );
 			
 					$this.trigger( 'mouseleave' );
-					console.log( id+ ' ajax-set-rating', userRating );
-					//alert( 'You gave a '+ userRating + ' star rating for '+ id +'!' );	
 				} else {
 					console.log( 'Something went wrong!' );
 				}

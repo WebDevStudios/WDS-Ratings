@@ -2,7 +2,8 @@
 <div id="star-rating-<?php echo isset( $post_id ) ? $post_id : 0; ?>" 
 	class="stars-ratings" 
 	data-rating="<?php echo isset( $post_rating ) ? $post_rating : 0; ?>" 
-	<?php echo isset( $user_rating ) ? 'data-userrating="'.$user_rating.'"' : ''; ?>>
+	<?php echo isset( $user_rating ) ? 'data-userrating="'.$user_rating.'"' : ''; ?>
+	data-post_id="<?php echo isset( $post_id ) ? $post_id : 0; ?>">
 		
 	<div class="stars-inner-wrap">
 		<div>

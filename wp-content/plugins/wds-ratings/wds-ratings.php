@@ -120,7 +120,7 @@ class WDS_Ratings {
 		global $post;
 		$js_data = array(
 			'ajaxurl'	=> admin_url( 'admin-ajax.php' ),
-			'post_id' => $post->ID,
+			//'post_id' => $post->ID,
 			'user_id' => get_current_user_id(),
 			'nonce' => wp_create_nonce( 'wds-ratings-nonce' ),
 		);

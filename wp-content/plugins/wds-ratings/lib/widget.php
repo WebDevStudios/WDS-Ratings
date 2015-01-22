@@ -48,8 +48,8 @@ class WDS_Ratings_Widget extends WP_Widget {
 		
 		$widget_string = $before_widget . $title;
 
-		if ( function_exists( 'post_ratings' ) ) {
-			$widget_string .= post_ratings( false );
+		if ( function_exists( 'wds_post_ratings' ) ) {
+			$widget_string .= wds_post_ratings( false );
 		}
 		
 		$widget_string .= $after_widget;
