@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WDS Ratings
  * Description: Allow users to rate posts
- * Version:     0.1.0
+ * Version:     0.2.0
  * Author:      WebDevStudios
  * Author URL:  http://webdevstudios.com
  * Text Domain: wds_ratings
@@ -62,7 +62,7 @@ class WDS_Ratings {
 		add_action( 'admin_init', array( $this->settings(), 'settings_init' ) );
 		
 		// create meta box for posts
-		if ( 'off' !== self::fetch_option( 'filter' ) ) {
+		if ( 'off' !== self::fetch_option( 'filter' ) && false != self::fetch_option( 'filter' ) ) {
 			add_action( 'add_meta_boxes', array( $this->meta_box(), 'meta_box_add' ) );
 			add_action( 'save_post', array( $this->meta_box(), 'meta_box_save' ) );
 		}
@@ -72,7 +72,7 @@ class WDS_Ratings {
 		add_action( 'wp_ajax_nopriv_wds_ratings_post_user_rating', array( $this->ajax(), 'post_user_rating' ) );
 		
 		// add content filter if enabled
-		if ( 1 === self::fetch_option( 'enable_content_filter' ) ) {
+		if ( '1' === self::fetch_option( 'enable_content_filter' ) ) {
 			add_filter( 'the_content', array( $this, 'content_filter' ) );
 		}
 	}
@@ -120,7 +120,7 @@ class WDS_Ratings {
 		global $post;
 		$js_data = array(
 			'ajaxurl'	=> admin_url( 'admin-ajax.php' ),
-			'post_id' => $post->ID,
+			//'post_id' => $post->ID,
 			'user_id' => get_current_user_id(),
 			'nonce' => wp_create_nonce( 'wds-ratings-nonce' ),
 		);
@@ -155,9 +155,12 @@ class WDS_Ratings {
 		
 		$post_rating = self::get_post_average( $post_id );
 		$user_rating = $this->get_user_rating( $user_id, $post_id );
+		
+		// round the rating to nearest .5
+		$rounded_rating = round( $post_rating * 2, 0 ) / 2;
 	
 		$data = array(
-			'post_rating' => $post_rating,
+			'post_rating' => $rounded_rating,
 			'post_id' => $post_id,
 		);
 		
@@ -167,9 +170,8 @@ class WDS_Ratings {
 		
 		ob_start();
 		extract( $data );
-		require_once( self::$path . 'lib/stars-template.php' );
+		include( self::$path . 'lib/stars-template.php' );
 		$ratings_template = ob_get_clean();
-		//ob_end_flush();
 		
 		return $ratings_template;
 	}
@@ -182,7 +184,7 @@ class WDS_Ratings {
 	 * @return bool
 	 */
 	private function is_allowed_on_post( $post_id = null ) {
-		if ( 'off' == self::fetch_option( 'filter' ) ) {
+		if ( ! self::fetch_option( 'filter' ) || ( 'off' == self::fetch_option( 'filter' ) ) ) {
 			return true;
 		}
 		
@@ -314,7 +316,7 @@ class WDS_Ratings {
 			return $this->ajax;
 		}
 		
-		require_once( 'lib/ajax.php' );
+		require_once( self::$path  . 'lib/ajax.php' );
 		$this->ajax = new WDS_Ratings_Ajax( $this );
 		return $this->ajax;
 	}
@@ -330,7 +332,7 @@ class WDS_Ratings {
 			return $this->meta_box;
 		}
 		
-		require_once( 'lib/meta-box.php' );
+		require_once( self::$path . 'lib/meta-box.php' );
 		$this->meta_box = new WDS_Ratings_Meta_Box( $this );
 		return $this->meta_box;
 	}
@@ -345,7 +347,7 @@ class WDS_Ratings {
 		if ( isset( $this->settings ) ) {
 			return $this->settings;
 		}
-		require_once( 'lib/options.php' );
+		require_once( self::$path . 'lib/options.php' );
 		$this->settings = new WDS_Ratings_Options( $this );
 		return $this->settings;
 	}
@@ -355,16 +357,17 @@ class WDS_Ratings {
 $GLOBALS['wds_ratings'] = new WDS_Ratings();
 $GLOBALS['wds_ratings']->hooks();
 
-function post_ratings( $echo = true ) {
-	global $wds_ratings;
-	
-	$ratings = $wds_ratings->fetch_ratings_template();
-	
-	if ( $echo ) {
-		echo $ratings;
-	}
-	
-	return $ratings;
+// include helpers
+if ( file_exists( WDS_Ratings::$path . 'lib/helpers.php' ) ) {
+	require_once( WDS_Ratings::$path . 'lib/helpers.php' );
+}
+
+// include widget if enabled
+if ( 
+	( '1' === WDS_Ratings::fetch_option( 'enable_widget' ) )
+	&& file_exists( WDS_Ratings::$path . 'lib/widget.php' ) 
+) {
+	require_once( WDS_Ratings::$path . 'lib/widget.php' );
 }
 
 endif;
