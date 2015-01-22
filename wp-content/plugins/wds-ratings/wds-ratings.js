@@ -4,7 +4,7 @@ var StarRatings = (function(window, document, $, undefined){
 	var app = { $stars : {}, $currRating : null };
 
 	app.init = function() {
-		$.extend( app, wds_ratings_config ); 
+		$.extend( app, wds_ratings_config );
 		
 		$( '.stars-ratings' )
 			.each( app.handleRatingForSection )
@@ -77,7 +77,7 @@ var StarRatings = (function(window, document, $, undefined){
 		app.$currRating = $this.parents( '.stars-ratings' );
 		var id = app.$currRating.attr( 'id' );
 		
-		app.post_id = app.$currRating.data( 'post_id' );;
+		app.post_id = app.$currRating.data( 'post_id' );
 		
 		var data = {
 			'action' : 'wds_ratings_post_user_rating',
