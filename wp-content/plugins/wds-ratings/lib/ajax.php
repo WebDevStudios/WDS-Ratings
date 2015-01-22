@@ -53,7 +53,6 @@ class WDS_Ratings_Ajax {
 								@gethostbyaddr( self::get_user_ip() ), 
 								$user_id ) 
 							);
-							
 					
 					// update with new rating data
 					$post_ratings_users = ( intval( $post_ratings_users ) + 1);
