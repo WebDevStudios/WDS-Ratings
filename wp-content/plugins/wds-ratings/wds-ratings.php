@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WDS Ratings
  * Description: Allow users to rate posts
- * Version:     0.1.0
+ * Version:     0.2.0
  * Author:      WebDevStudios
  * Author URL:  http://webdevstudios.com
  * Text Domain: wds_ratings
@@ -72,7 +72,7 @@ class WDS_Ratings {
 		add_action( 'wp_ajax_nopriv_wds_ratings_post_user_rating', array( $this->ajax(), 'post_user_rating' ) );
 		
 		// add content filter if enabled
-		if ( 1 === self::fetch_option( 'enable_content_filter' ) ) {
+		if ( '1' === self::fetch_option( 'enable_content_filter' ) ) {
 			add_filter( 'the_content', array( $this, 'content_filter' ) );
 		}
 	}
@@ -360,6 +360,14 @@ $GLOBALS['wds_ratings']->hooks();
 // include helpers
 if ( file_exists( WDS_Ratings::$path . 'lib/helpers.php' ) ) {
 	require_once( WDS_Ratings::$path . 'lib/helpers.php' );
+}
+
+// include widget if enabled
+if ( 
+	( '1' === WDS_Ratings::fetch_option( 'enable_widget' ) )
+	&& file_exists( WDS_Ratings::$path . 'lib/widget.php' ) 
+) {
+	require_once( WDS_Ratings::$path . 'lib/widget.php' );
 }
 
 endif;

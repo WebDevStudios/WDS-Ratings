@@ -78,6 +78,14 @@ class WDS_Ratings_Options {
 			'WDS_Ratings_settingsPage', 
 			'wds_ratings_settingsPage_section' 
 		);
+		
+		add_settings_field( 
+			'enable_widget_render', 
+			__( 'Enable Widget', 'wds_ratings' ), 
+			array( $this, 'enable_widget_render' ), 
+			'WDS_Ratings_settingsPage', 
+			'wds_ratings_settingsPage_section' 
+		);
 	}
 	
 	/**
@@ -103,6 +111,17 @@ class WDS_Ratings_Options {
 	public function enable_content_filter_render() {
 		?>
 		<input type='checkbox' name='wds_ratings_settings[enable_content_filter]' <?php checked( WDS_Ratings::fetch_option( 'enable_content_filter' ), 1 ); ?> value='1'>
+		<?php
+	}
+	
+	/**
+	 * Checkbox for enabling widget
+	 * @since  0.1.0
+	 * @access public
+	 */
+	public function enable_widget_render() {
+		?>
+		<input type='checkbox' name='wds_ratings_settings[enable_widget]' <?php checked( WDS_Ratings::fetch_option( 'enable_widget' ), 1 ); ?> value='1'>
 		<?php
 	}
 	
