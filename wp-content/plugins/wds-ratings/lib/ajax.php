@@ -28,14 +28,15 @@ class WDS_Ratings_Ajax {
 		}
 
 		global $wpdb;
+		$ratings_table = $wpdb->prefix . $this->wds_ratings->ratings_table;
 
 		$post_id = $_POST['post_id'];
 		$user_id = $_POST['user_id'];
 		$rating  = $_POST['rating'];
 
-		$post_ratings_users   = get_post_meta( $post_id, 'ratings_users', true );
-		$post_ratings_score   = get_post_meta( $post_id, 'ratings_score', true );
-		$post_ratings_average = get_post_meta( $post_id, 'ratings_average', true );
+		$post_ratings_users   = get_post_meta( $post_id, '_wds_ratings_users', true );
+		$post_ratings_score   = get_post_meta( $post_id, '_wds_ratings_score', true );
+		$post_ratings_average = get_post_meta( $post_id, '_wds_ratings_average', true );
 
 		// default to zero if not available
 		$post_ratings_users   = $post_ratings_users ? $post_ratings_users : 0;
@@ -51,7 +52,7 @@ class WDS_Ratings_Ajax {
 			$user_ip = self::get_user_ip();
 			// log rating into ratings table
 			$rate_log = $wpdb->query(
-				$wpdb->prepare( "INSERT INTO {$this->wds_ratings->ratings_table} VALUES (%d, %d, %d, %d, %s, %s, %d )",
+				$wpdb->prepare( "INSERT INTO {$ratings_table} VALUES (%d, %d, %d, %d, %s, %s, %d )",
 				0,
 				$post_id,
 				$rating,
@@ -66,16 +67,16 @@ class WDS_Ratings_Ajax {
 			$post_ratings_score = ( $post_ratings_score + intval( $rating ) );
 			$post_ratings_average = round( $post_ratings_score / $post_ratings_users, 2 );
 
-			update_post_meta( $post_id, 'ratings_users', $post_ratings_users );
-			update_post_meta( $post_id, 'ratings_score', $post_ratings_score );
-			update_post_meta( $post_id, 'ratings_average', $post_ratings_average );
+			update_post_meta( $post_id, '_wds_ratings_users', $post_ratings_users );
+			update_post_meta( $post_id, '_wds_ratings_score', $post_ratings_score );
+			update_post_meta( $post_id, '_wds_ratings_average', $post_ratings_average );
 
 		} else {
 			// We're updating the user's rating - so we need the post meta
 			$query = $wpdb->prepare(
 				"
 				UPDATE
-					{$this->wds_ratings->ratings_table}
+					{$ratings_table}
 				SET
 					rating = %d
 				WHERE
@@ -98,9 +99,9 @@ class WDS_Ratings_Ajax {
 			// update the post's rating data
 			$post_ratings_score = ( $post_ratings_score + intval( $rating ) - intval( $old_user_rating ) );
 			$post_ratings_average = round( $post_ratings_score / $post_ratings_users, 2 );
-			update_post_meta( $post_id, 'ratings_users', $post_ratings_users );
-			update_post_meta( $post_id, 'ratings_score', $post_ratings_score );
-			update_post_meta( $post_id, 'ratings_average', $post_ratings_average );
+			update_post_meta( $post_id, '_wds_ratings_users', $post_ratings_users );
+			update_post_meta( $post_id, '_wds_ratings_score', $post_ratings_score );
+			update_post_meta( $post_id, '_wds_ratings_average', $post_ratings_average );
 		}
 
 		// Allow other plugins to hook in

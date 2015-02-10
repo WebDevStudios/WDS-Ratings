@@ -21,7 +21,7 @@ class WDS_Ratings {
 	private static $options;
 
 	protected static $single_instance = null;
-	protected $ratings_table   = 'wds_ratings';
+	public $ratings_table   = 'wds_ratings';
 
 	/**
 	 * Creates or returns an instance of this class.
@@ -42,7 +42,6 @@ class WDS_Ratings {
 	 * @access public
 	 */
 	private function __construct() {
-
 		// Useful variables
 		self::$url  = trailingslashit( plugin_dir_url( __FILE__ ) );
 		self::$path = trailingslashit( dirname( __FILE__ ) );
@@ -65,21 +64,26 @@ class WDS_Ratings {
 		add_action( 'wp_head', array( $this, 'do_wds_ratings' ), 1 );
 
 		// Options
-		add_action( 'admin_menu', array( $this->settings(), 'add_admin_menu' ) );
-		add_action( 'admin_init', array( $this->settings(), 'settings_init' ) );
+		$this->settings();
+		
+		//CMB2
+		$this->include_cmb2();
 
 		// create meta box for posts
-		if ( 'off' !== self::fetch_option( 'filter' ) && false != self::fetch_option( 'filter' ) ) {
-			add_action( 'add_meta_boxes', array( $this->meta_box(), 'meta_box_add' ) );
-			add_action( 'save_post', array( $this->meta_box(), 'meta_box_save' ) );
+		if ( 
+			( 'off' !== self::fetch_option( 'filter_type' ) )
+			&& ( false != self::fetch_option( 'filter_type' ) )
+		) {
+			$this->meta_box();
 		}
 
 		// AJAX
 		add_action( 'wp_ajax_wds_ratings_post_user_rating', array( $this->ajax(), 'post_user_rating' ) );
 		add_action( 'wp_ajax_nopriv_wds_ratings_post_user_rating', array( $this->ajax(), 'post_user_rating' ) );
 
+
 		// add content filter if enabled
-		if ( '1' === self::fetch_option( 'enable_content_filter' ) ) {
+		if ( 'on' === self::fetch_option( 'enable_content_filter' ) ) {
 			add_filter( 'the_content', array( $this, 'content_filter' ) );
 		}
 	}
@@ -199,7 +203,7 @@ class WDS_Ratings {
 		}
 
 		$is_added = 'on' === get_post_meta( $post_id, '_wds_ratings_added_to_filter', true ) ? true : false;
-		$filter = self::fetch_option( 'filter' );
+		$filter = self::fetch_option( 'filter_type' );
 
 		// Are ratings allowed on this post?
 		if (
@@ -293,7 +297,7 @@ class WDS_Ratings {
 	 * @return int $average
 	 */
 	private static function get_post_average( $post_id ) {
-		$average = get_post_meta( $post_id, 'ratings_average', true );
+		$average = get_post_meta( $post_id, '_wds_ratings_average', true );
 
 		return $average ? $average : 0;
 	}
@@ -310,7 +314,7 @@ class WDS_Ratings {
 	public static function fetch_option( $key ) {
 		// Are options already set?
 		if ( empty( self::$options ) ) {
-			self::$options = get_option( 'wds_ratings_settings' );
+			self::$options = get_option( 'wds_ratings' );
 		}
 
 		// Does the key exist?
@@ -345,13 +349,7 @@ class WDS_Ratings {
 	 * @return object WDS_Ratings_Meta_Box
 	 */
 	public function meta_box() {
-		if ( isset( $this->meta_box ) ) {
-			return $this->meta_box;
-		}
-
 		require_once( self::$path . 'lib/meta-box.php' );
-		$this->meta_box = new WDS_Ratings_Meta_Box( $this );
-		return $this->meta_box;
 	}
 
 	/**
@@ -361,12 +359,20 @@ class WDS_Ratings {
 	 * @return object WDS_Ratings_Options
 	 */
 	public function settings() {
-		if ( isset( $this->settings ) ) {
-			return $this->settings;
-		}
 		require_once( self::$path . 'lib/options.php' );
-		$this->settings = new WDS_Ratings_Options( $this );
-		return $this->settings;
+	}
+	
+	/**
+	 * Include CMB2
+	 * @since  0.1.0
+	 * @access public
+	 */
+	public function include_cmb2() {
+		 if ( file_exists( dirname( __FILE__ ) . '/cmb2/init.php' ) ) {
+			require_once dirname( __FILE__ ) . '/cmb2/init.php';
+		} elseif ( file_exists( dirname( __FILE__ ) . '/CMB2/init.php' ) ) {
+			require_once dirname( __FILE__ ) . '/CMB2/init.php';
+		}
 	}
 }
 
@@ -383,7 +389,7 @@ if ( file_exists( WDS_Ratings::$path . 'lib/helpers.php' ) ) {
 
 // include widget if enabled
 if (
-	( '1' === WDS_Ratings::fetch_option( 'enable_widget' ) )
+	( 'on' === WDS_Ratings::fetch_option( 'enable_widget' ) )
 	&& file_exists( WDS_Ratings::$path . 'lib/widget.php' )
 ) {
 	require_once( WDS_Ratings::$path . 'lib/widget.php' );
