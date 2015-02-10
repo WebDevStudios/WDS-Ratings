@@ -1,11 +1,20 @@
 var StarRatings = (function(window, document, $, undefined){
 	'use strict';
 
+	var l10n = window.wds_ratings_config;
 	var app = { $stars : {}, $currRating : null };
 
+	app.log = function() {
+		app.log.history = app.log.history || [];
+		app.log.history.push( arguments );
+		if ( window.console && l10n.debug ) {
+			window.console.log( Array.prototype.slice.call(arguments) );
+		}
+	};
+
 	app.init = function() {
-		$.extend( app, wds_ratings_config );
-		
+		$.extend( app, l10n );
+
 		$( '.stars-ratings' )
 			.each( app.handleRatingForSection )
 			.find( '.stars' )
@@ -30,7 +39,7 @@ var StarRatings = (function(window, document, $, undefined){
 		if ( userRating ) {
 			app.$currRating.addClass( 'has-user-rating' );
 		}
-			
+
 		// Handle the rating styling
 		app.handleRating( userRating ? userRating : rating, id, userRating );
 	};
@@ -76,9 +85,9 @@ var StarRatings = (function(window, document, $, undefined){
 		var userRating = $this.data( 'stars' );
 		app.$currRating = $this.parents( '.stars-ratings' );
 		var id = app.$currRating.attr( 'id' );
-		
+
 		app.post_id = app.$currRating.data( 'post_id' );
-		
+
 		var data = {
 			'action' : 'wds_ratings_post_user_rating',
 			'nonce' : app.nonce,
@@ -86,25 +95,25 @@ var StarRatings = (function(window, document, $, undefined){
 			'post_id' : app.post_id,
 			'user_id' : app.user_id,
 		};
-		
+
 		$.ajax({
 			'type' : 'POST',
 			'url' : app.ajaxurl,
 			'dataType' : 'JSON',
 			'data' : data,
 			'success' : function( response ) {
-				if ( response.status == 'success' ) {
-					console.log( 'W00t!', response );
-					
-					var rating = app.$currRating.data( 'rating' );
+				if ( response.success ) {
+					app.log( 'W00t!', response );
+
+					// var rating = app.$currRating.data( 'rating' );
 					app.$currRating.data( 'userrating', userRating ).addClass( 'has-user-rating' );
-			
+
 					// Handle the rating styling
 					app.handleRating( userRating, id, true );
-			
+
 					$this.trigger( 'mouseleave' );
 				} else {
-					console.log( 'Something went wrong!' );
+					app.log( 'Something went wrong!', response );
 				}
 			}
 		});
