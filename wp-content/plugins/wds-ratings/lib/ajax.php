@@ -105,7 +105,7 @@ class WDS_Ratings_Ajax {
 		}
 
 		// Allow other plugins to hook in
-		do_action( 'rate_post', $user_id, $post_id, $rating );
+		do_action( 'wds_rate_post', $user_id, $post_id, $rating );
 
 		wp_send_json_success( $_POST );
 	}
