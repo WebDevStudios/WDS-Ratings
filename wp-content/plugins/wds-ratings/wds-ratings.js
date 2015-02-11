@@ -88,7 +88,7 @@ var StarRatings = (function(window, document, $, undefined){
 		
 		// return early if user is not logged in
 		if ( parseInt(app.user_id) < 1) {
-			alert('You must be logged in to rate an article');
+			alert(l10n.no_auth_alert);
 			return;
 		}
 

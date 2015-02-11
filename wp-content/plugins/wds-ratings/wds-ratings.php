@@ -134,6 +134,7 @@ class WDS_Ratings {
 			'user_id'   => get_current_user_id(),
 			'nonce'     => wp_create_nonce( 'wds-ratings-nonce' ),
 			'debug'     => defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG,
+			'no_auth_alert' => __( 'You must be logged in to rate an article', 'wds_ratings' ),
 		);
 	}
 
