@@ -85,6 +85,12 @@ var StarRatings = (function(window, document, $, undefined){
 		var userRating = $this.data( 'stars' );
 		app.$currRating = $this.parents( '.stars-ratings' );
 		var id = app.$currRating.attr( 'id' );
+		
+		// return early if user is not logged in
+		if ( parseInt(app.user_id) < 1) {
+			alert('You must be logged in to rate an article');
+			return;
+		}
 
 		app.post_id = app.$currRating.data( 'post_id' );
 
