@@ -6,7 +6,6 @@ class WDS_Ratings_Meta_Box {
 	/**
 	 * Setup our class
 	 * @since  0.1.0
-	 * @access public
 	 */
 	public function __construct() {
 		add_action( 'cmb2_init', array( $this, 'register_metabox' ) );
@@ -15,7 +14,6 @@ class WDS_Ratings_Meta_Box {
 	/**
 	 * Add the metabox
 	 * @since  0.1.0
-	 * @access public
 	 */
 	public function register_metabox() {
 		// Start with an underscore to hide fields from custom fields list
