@@ -69,18 +69,11 @@ class WDS_Ratings_Admin {
 				'type' => 'checkbox',
 			),
 		);
-	}
 
-	/**
-	 * Initiate our hooks
-	 * @since 0.1.0
-	 */
-	public function hooks() {
 		add_action( 'admin_init', array( $this, 'init' ) );
 		add_action( 'admin_menu', array( $this, 'add_options_page' ) );
 		add_filter( 'cmb2_meta_boxes', array( $this, 'add_options_page_metabox' ) );
 	}
-
 
 	/**
 	 * Register our setting to WP
@@ -95,12 +88,12 @@ class WDS_Ratings_Admin {
 	 * @since 0.1.0
 	 */
 	public function add_options_page() {
-		$this->options_page = add_menu_page( 
-			$this->title, 
-			$this->title, 
-			'manage_options', 
-			$this->key, 
-			array( $this, 'admin_page_display' ) 
+		$this->options_page = add_menu_page(
+			$this->title,
+			$this->title,
+			'manage_options',
+			$this->key,
+			array( $this, 'admin_page_display' )
 		);
 	}
 
@@ -168,9 +161,6 @@ class WDS_Ratings_Admin {
 
 }
 
-$GLOBALS['WDS_Ratings_Admin'] = new WDS_Ratings_Admin;
-$GLOBALS['WDS_Ratings_Admin']->hooks();
-
 /**
  * Wrapper function around cmb2_get_option
  * @since  0.1.0
@@ -178,6 +168,5 @@ $GLOBALS['WDS_Ratings_Admin']->hooks();
  * @return mixed        Option value
  */
 function wds_ratings_get_option( $key = '' ) {
-	global $WDS_Ratings_Admin;
-	return cmb2_get_option( $WDS_Ratings_Admin->key, $key );
+	return cmb2_get_option( wds_ratings()->admin->key, $key );
 }

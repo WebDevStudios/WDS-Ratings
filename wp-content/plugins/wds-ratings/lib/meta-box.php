@@ -35,7 +35,7 @@ class WDS_Ratings_Meta_Box {
 	}
 
 	public function filter_label() {
-		$type = WDS_Ratings::fetch_option( 'filter_type' );
+		$type = wds_ratings()->fetch_option( 'filter_type' );
 
 		switch ( $type ) {
 			case 'inclusive':
@@ -55,7 +55,5 @@ class WDS_Ratings_Meta_Box {
 	}
 
 }
-
-$GLOBALS['WDS_Ratings_Meta_Box'] = new WDS_Ratings_Meta_Box;
 
 endif;
