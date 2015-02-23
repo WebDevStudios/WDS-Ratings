@@ -64,7 +64,7 @@ class WDS_Ratings {
 	 */
 	public function hooks() {
 		// CMB2 for metabox/options page
-		require_once( $this->path  . 'cmb2/init.php' );
+		require_once( $this->path  . 'lib/cmb2/init.php' );
 
 		// Options
 		require_once( $this->path . 'lib/options.php' );
