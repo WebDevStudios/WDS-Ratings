@@ -2,23 +2,32 @@
 /**
  * Plugin Name: WDS Ratings
  * Description: Allow users to rate posts
- * Version:     0.2.0
+ * Version:     0.4.0
  * Author:      WebDevStudios
  * Author URL:  http://webdevstudios.com
  * Text Domain: wds_ratings
  * Domain Path: /languages
  */
 
-if( ! class_exists( 'WDS_Ratings' ) ):
+if ( ! class_exists( 'WDS_Ratings' ) ) :
+
 class WDS_Ratings {
 
+	/**
+	 * Plugin version
+	 */
 	const VERSION = '0.4.0';
 
-	public static $url;
-	public static $path;
-	public static $name;
+	/**
+	 * Only incremenent if table structure needs to change in a future version
+	 */
+	const DB_VERSION = '0.1.0';
 
-	private static $options;
+	public $url;
+	public $path;
+	public $name;
+
+	private $options;
 
 	protected static $single_instance = null;
 	public $ratings_table   = 'wds_ratings';
@@ -39,59 +48,66 @@ class WDS_Ratings {
 	/**
 	 * Sets up our plugin
 	 * @since  0.1.0
-	 * @access public
 	 */
-	private function __construct() {
+	protected function __construct() {
 		// Useful variables
-		self::$url  = trailingslashit( plugin_dir_url( __FILE__ ) );
-		self::$path = trailingslashit( dirname( __FILE__ ) );
-		self::$name = __( 'WDS Ratings', 'wds_ratings' );
+		$this->url  = trailingslashit( plugin_dir_url( __FILE__ ) );
+		$this->path = trailingslashit( dirname( __FILE__ ) );
+		$this->name = __( 'WDS Ratings', 'wds_ratings' );
 
 		// Set the options
-		self::$options = get_option( 'wds_ratings_settings' );
+		$this->options = get_option( 'wds_ratings_settings' );
 	}
 
 	/**
 	 * Hook in where we need to
 	 * @since  0.1.0
-	 * @access public
 	 */
 	public function hooks() {
+		// CMB2 for metabox/options page
+		require_once( $this->path  . 'cmb2/init.php' );
+
+		// Options
+		require_once( $this->path . 'lib/options.php' );
+		$this->admin = new WDS_Ratings_Admin;
+		$this->admin->hooks();
+
+		// create meta box for posts
+		if (
+			( 'off' !== $this->fetch_option( 'filter_type' ) )
+			&& ( false != $this->fetch_option( 'filter_type' ) )
+		) {
+			require_once( $this->path . 'lib/meta-box.php' );
+			$this->metabox = new WDS_Ratings_Meta_Box();
+		}
+
+		require_once( $this->path  . 'lib/ajax.php' );
+		$this->ajax = new WDS_Ratings_Ajax();
+
 		add_action( 'init', array( $this, 'init' ) );
 		register_activation_hook( __FILE__, array( $this, 'activation' ) );
 
 		// Add JS and CSS to head
 		add_action( 'wp_head', array( $this, 'do_wds_ratings' ), 1 );
 
-		// Options
-		$this->settings();
-		
-		//CMB2
-		$this->include_cmb2();
-
-		// create meta box for posts
-		if ( 
-			( 'off' !== self::fetch_option( 'filter_type' ) )
-			&& ( false != self::fetch_option( 'filter_type' ) )
-		) {
-			$this->meta_box();
-		}
-
 		// AJAX
-		add_action( 'wp_ajax_wds_ratings_post_user_rating', array( $this->ajax(), 'post_user_rating' ) );
-		add_action( 'wp_ajax_nopriv_wds_ratings_post_user_rating', array( $this->ajax(), 'post_user_rating' ) );
+		add_action( 'wp_ajax_wds_ratings_post_user_rating', array( $this->ajax, 'post_user_rating' ) );
+		add_action( 'wp_ajax_nopriv_wds_ratings_post_user_rating', array( $this->ajax, 'post_user_rating' ) );
 
+		// Cache
+		add_action( 'wds_rate_post', array( $this, 'update_user_post_rating_cache' ) );
 
 		// add content filter if enabled
-		if ( 'on' === self::fetch_option( 'enable_content_filter' ) ) {
+		if ( 'on' === $this->fetch_option( 'enable_content_filter' ) ) {
 			add_filter( 'the_content', array( $this, 'content_filter' ) );
 		}
+
+		$this->maybe_add_db_table();
 	}
 
 	/**
 	 * Init hooks
 	 * @since  0.1.0
-	 * @access public
 	 * @return null
 	 */
 	public function init() {
@@ -103,16 +119,15 @@ class WDS_Ratings {
 	/**
 	 * Do the ratings thing
 	 * @since  0.1.0
-	 * @access public
 	 * @return bool
 	 */
 	public function do_wds_ratings() {
 		if ( $this->is_allowed_on_post() ) {
 			// CSS
-			//wp_enqueue_style( 'wds-ratings', self::$url . 'wds-ratings.css' );
+			//wp_enqueue_style( 'wds-ratings', $this->url . 'wds-ratings.css' );
 
 			// JS
-			wp_enqueue_script( 'wds-ratings', self::$url . 'wds-ratings.js', array( 'jquery' ) );
+			wp_enqueue_script( 'wds-ratings', $this->url . 'wds-ratings.js', array( 'jquery' ) );
 			wp_localize_script( 'wds-ratings', 'wds_ratings_config', $this->compile_js_data() );
 
 			return true;
@@ -124,10 +139,9 @@ class WDS_Ratings {
 	/**
 	 * JS data we want to localize
 	 * @since  0.1.0
-	 * @access private
 	 * @return array $js_data
 	 */
-	private function compile_js_data() {
+	protected function compile_js_data() {
 		return array(
 			'ajaxurl'   => admin_url( 'admin-ajax.php' ),
 			//'post_id' => $post->ID,
@@ -141,7 +155,6 @@ class WDS_Ratings {
 	/**
 	 * Add ratings before post content
 	 * @since  0.1.0
-	 * @access public
 	 * @return string $content
 	 */
 	public function content_filter( $content ) {
@@ -156,14 +169,13 @@ class WDS_Ratings {
 	/**
 	 * Fetch the ratings template
 	 * @since  0.1.0
-	 * @access public
 	 * @return string $ratings_template
 	 */
 	public function fetch_ratings_template() {
 		$post_id = get_the_ID();
 		$user_id = get_current_user_id();
 
-		$post_rating = self::get_post_average( $post_id );
+		$post_rating = $this->get_post_average( $post_id );
 		$user_rating = $this->get_user_rating( $user_id, $post_id );
 
 		// round the rating to nearest .5
@@ -180,7 +192,7 @@ class WDS_Ratings {
 
 		ob_start();
 		extract( $data );
-		include( self::$path . 'lib/stars-template.php' );
+		include( $this->path . 'lib/stars-template.php' );
 		$ratings_template = ob_get_clean();
 
 		return $ratings_template;
@@ -189,12 +201,11 @@ class WDS_Ratings {
 	/**
 	 * Find out if ratings are allowed on the post
 	 * @since  0.1.0
-	 * @access private
 	 * @param int $post_id=null
 	 * @return bool
 	 */
-	private function is_allowed_on_post( $post_id = null ) {
-		if ( ! self::fetch_option( 'filter' ) || ( 'off' == self::fetch_option( 'filter' ) ) ) {
+	protected function is_allowed_on_post( $post_id = null ) {
+		if ( ! $this->fetch_option( 'filter' ) || ( 'off' == $this->fetch_option( 'filter' ) ) ) {
 			return true;
 		}
 
@@ -204,7 +215,7 @@ class WDS_Ratings {
 		}
 
 		$is_added = 'on' === get_post_meta( $post_id, '_wds_ratings_added_to_filter', true ) ? true : false;
-		$filter = self::fetch_option( 'filter_type' );
+		$filter = $this->fetch_option( 'filter_type' );
 
 		// Are ratings allowed on this post?
 		if (
@@ -220,61 +231,105 @@ class WDS_Ratings {
 	/**
 	 * Get a user's rating for the post
 	 * @since  0.1.0
-	 * @access private
 	 * @return int $rating
 	 */
 	public function get_user_rating( $user_id, $post_id ) {
 		global $wpdb;
 
-		$ratings_table = $wpdb->prefix . $this->ratings_table;
-		$sql = "SELECT * FROM `{$ratings_table}` WHERE `userid` = $user_id AND `postid` = $post_id";
-		$results = $wpdb->get_results( $sql );
-
-		if ( ! empty( $results ) && is_array( $results ) ) {
-			return intval( $results[0]->rating );
+		// Check if we've cached the user's rating for the day
+		if ( $rating = $this->get_user_post_rating_cache( $user_id, $post_id ) ) {
+			return $rating;
 		}
 
-		// no rating found
-		return false;
+		$ratings_table = $wpdb->prefix . $this->ratings_table;
+		$sql = $wpdb->prepare( "SELECT * FROM `{$ratings_table}` WHERE `userid` = %d AND `postid` = %d", $user_id, $post_id );
+		$results = $wpdb->get_results( $sql );
+
+		$rating = ! empty( $results ) && is_array( $results )
+			? intval( $results[0]->rating )
+			: false;
+
+		// Cache rating for a day
+		$this->update_user_post_rating_cache( $user_id, $post_id, $rating );
+
+		return $rating;
+	}
+
+	/**
+	 * Get cached rating for a user/post combo
+	 * @since  0.4.0
+	 * @param  int    $user_id
+	 * @param  int    $post_id
+	 * @return mixed  Cache results
+	 */
+	public function update_user_post_rating_cache( $user_id, $post_id, $rating ) {
+		return wp_cache_set( $this->get_user_post_cache_key( $user_id, $post_id ), $rating, 'wds_ratings', 8 * HOUR_IN_SECONDS ) ) {
+	}
+
+	/**
+	 * Get cached rating for a user/post combo
+	 * @since  0.4.0
+	 * @param  int    $user_id
+	 * @param  int    $post_id
+	 * @return mixed  Cache results
+	 */
+	public function get_user_post_rating_cache( $user_id, $post_id ) {
+		return wp_cache_get( $this->get_user_post_cache_key( $user_id, $post_id ), 'wds_ratings' ) ) {
+	}
+
+	/**
+	 * Get a cache key for a user/post combo
+	 * @since  0.4.0
+	 * @param  int    $user_id
+	 * @param  int    $post_id
+	 * @return string Cache key
+	 */
+	public function get_user_post_cache_key( $user_id, $post_id ) {
+		return sprintf( 'user_rating_%d_%d', $user_id, $post_id );
 	}
 
 	/**
 	 * Activation hook
 	 * @since  0.1.0
-	 * @access public
 	 * @return null
 	 */
 	public function activation( $network_wide ) {
 		if ( is_multisite() && $network_wide ) {
-			// TODO: this will not work w/ an extremely large network.
-			$ms_sites = wp_get_sites();
+			/**
+			 * this will return a max of 100 sites.
+			 * The rest will have to depend on the db version check
+			 */
+			$ms_sites = wp_get_sites( array(
+				'limit'      => 100,
+			) );
 
 			if ( ! empty( $ms_sites ) ) {
 				foreach ( $ms_sites as $ms_site ) {
-					switch_to_blog( $ms_site['blog_id'] );
-					$this->ratings_activate( $ms_site['blog_id'] );
+					$this->maybe_add_db_table( $ms_site['blog_id'] );
 				}
 			}
-
-			restore_current_blog();
 		} else {
-			$this->ratings_activate();
+			$this->maybe_add_db_table();
 		}
 	}
 
 	/**
 	 * Create the ratings table
 	 * @since  0.1.0
-	 * @access protected
 	 * @return null
 	 */
-	protected function ratings_activate( $blog_id = 0 ) {
+	protected function maybe_add_db_table( $blog_id = null ) {
 		global $wpdb;
-		$table = $wpdb->prefix . $this->ratings_table;
 
-		if ( $wpdb->get_var( "SHOW TABLES LIKE '$table'" ) == $table ) {
+		$stored_db_version = $blog_id
+			? get_blog_option( $blog_id, 'wds_ratings_db_version' )
+			: get_option( 'wds_ratings_db_version' );
+
+		if ( $stored_db_version && self::DB_VERSION == $stored_db_version ) {
 			return;
 		}
+
+		$table = $wpdb->get_blog_prefix( $blog_id ) . $this->ratings_table;
 
 		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 
@@ -289,15 +344,18 @@ class WDS_Ratings {
 		PRIMARY KEY (rating_id));";
 
 		dbDelta( $create_sql );
+
+		return $blog_id
+			? update_blog_option( $blog_id, 'wds_ratings_db_version', self::DB_VERSION )
+			: update_option( 'wds_ratings_db_version', self::DB_VERSION );
 	}
 
 	/**
 	 * Get a posts average rating
 	 * @since  0.1.0
-	 * @access private static
 	 * @return int $average
 	 */
-	private static function get_post_average( $post_id ) {
+	public function get_post_average( $post_id ) {
 		$average = get_post_meta( $post_id, '_wds_ratings_average', true );
 
 		return $average ? $average : 0;
@@ -307,74 +365,25 @@ class WDS_Ratings {
 	* Get options from the wds_ratings_settings option array.
 	*
 	* @since 1.0.0
-	* @access public
 	*
 	* @param  string $key Key to get from the wds_ratings_settings option array.
 	* @return string Returns the value of the key or false on failure.
 	*/
-	public static function fetch_option( $key ) {
+	public function fetch_option( $key ) {
 		// Are options already set?
-		if ( empty( self::$options ) ) {
-			self::$options = get_option( 'wds_ratings' );
+		if ( empty( $this->options ) ) {
+			$this->options = get_option( 'wds_ratings' );
 		}
 
 		// Does the key exist?
-		if ( isset( self::$options[$key] ) ) {
-			return self::$options[$key];
+		if ( isset( $this->options[ $key ] ) ) {
+			return $this->options[ $key ];
 		}
 
 		// If nothing has been returned yet, return false
 		return false;
 	}
 
-	/**
-	 * Ajax class
-	 * @since  0.1.0
-	 * @access public
-	 * @return object WDS_Ratings_Ajax
-	 */
-	public function ajax() {
-		if ( isset( $this->ajax ) ) {
-			return $this->ajax;
-		}
-
-		require_once( self::$path  . 'lib/ajax.php' );
-		$this->ajax = new WDS_Ratings_Ajax( $this );
-		return $this->ajax;
-	}
-
-	/**
-	 * Meta Box class
-	 * @since  0.1.0
-	 * @access public
-	 * @return object WDS_Ratings_Meta_Box
-	 */
-	public function meta_box() {
-		require_once( self::$path . 'lib/meta-box.php' );
-	}
-
-	/**
-	 * Settings class
-	 * @since  0.1.0
-	 * @access public
-	 * @return object WDS_Ratings_Options
-	 */
-	public function settings() {
-		require_once( self::$path . 'lib/options.php' );
-	}
-	
-	/**
-	 * Include CMB2
-	 * @since  0.1.0
-	 * @access public
-	 */
-	public function include_cmb2() {
-		 if ( file_exists( dirname( __FILE__ ) . '/cmb2/init.php' ) ) {
-			require_once dirname( __FILE__ ) . '/cmb2/init.php';
-		} elseif ( file_exists( dirname( __FILE__ ) . '/CMB2/init.php' ) ) {
-			require_once dirname( __FILE__ ) . '/CMB2/init.php';
-		}
-	}
 }
 
 function wds_ratings() {
@@ -384,16 +393,11 @@ function wds_ratings() {
 wds_ratings()->hooks();
 
 // include helpers
-if ( file_exists( WDS_Ratings::$path . 'lib/helpers.php' ) ) {
-	require_once( WDS_Ratings::$path . 'lib/helpers.php' );
-}
+require_once( wds_ratings()->path . 'lib/helpers.php' );
 
 // include widget if enabled
-if (
-	( 'on' === WDS_Ratings::fetch_option( 'enable_widget' ) )
-	&& file_exists( WDS_Ratings::$path . 'lib/widget.php' )
-) {
-	require_once( WDS_Ratings::$path . 'lib/widget.php' );
+if ( 'on' === wds_ratings()->fetch_option( 'enable_widget' ) ) {
+	require_once( wds_ratings()->path . 'lib/widget.php' );
 }
 
 endif;
