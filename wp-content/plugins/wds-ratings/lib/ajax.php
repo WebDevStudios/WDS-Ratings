@@ -1,5 +1,6 @@
 <?php
-if( ! class_exists( 'WDS_Ratings_Ajax' ) ):
+if ( ! class_exists( 'WDS_Ratings_Ajax' ) ) :
+
 class WDS_Ratings_Ajax {
 	/**
 	 * Setup our class
@@ -131,4 +132,5 @@ class WDS_Ratings_Ajax {
 	}
 
 }
+
 endif;
