@@ -95,20 +95,19 @@ class WDS_Ratings_Admin {
 		// Set our CMB2 fields
 
 		$cmb->add_field( array(
-			'name' => __( 'Filter Type', 'wds_ratings' ),
-			'desc' => __( 'If exclusive, the ratings will not available on posts added to the WDS Ratings filter. <br /> If inclusive, ratings will not available on posts added to the WDS Ratings filter.', 'wds_ratings' ),
+			'name' => __( 'Ratings Granular Control', 'wds_ratings' ),
 			'id'   => 'filter_type',
-			'type' => 'select',
+			'type' => 'radio',
 			'options' => array(
-				'off'       => __( 'Off', 'wds_ratings' ),
-				'exclusive' => __( 'Exclusive', 'wds_ratings' ),
-				'inclusive' => __( 'Inclusive', 'wds_ratings' ),
+				'exclusive' => __( 'Option to Hide', 'wds_ratings' ) . '<p class="cmb2-metabox-description">' . __( 'Defaults to the checkbox on the post/page edit screen causing the rating to be <strong>removed</strong> from that post (while others are on by default).', 'wds_ratings' ) . '</p>',
+				'inclusive' => __( 'Option to Show', 'wds_ratings' ) . '<p class="cmb2-metabox-description">' . __( 'Defaults to the checkbox on the post/page edit screen causing the rating to be <strong>added</strong> to that post (and others are off by default).', 'wds_ratings' ) . '</p>',
 			),
+			'default' => 'exclusive',
 		) );
 
 		$cmb->add_field( array(
 			'name' => __( 'Enable Content Filter', 'cmb2' ),
-			'desc' => __( 'Add ratings before post content', 'wds_ratings' ),
+			'desc' => __( 'Automatically add ratings before post content', 'wds_ratings' ),
 			'id'   => 'enable_content_filter',
 			'type' => 'checkbox',
 		) );
