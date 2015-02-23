@@ -69,7 +69,6 @@ class WDS_Ratings {
 		// Options
 		require_once( $this->path . 'lib/options.php' );
 		$this->admin = new WDS_Ratings_Admin;
-		$this->admin->hooks();
 
 		// create meta box for posts
 		if (

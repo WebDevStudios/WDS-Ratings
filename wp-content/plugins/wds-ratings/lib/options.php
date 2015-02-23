@@ -82,6 +82,7 @@ class WDS_Ratings_Admin {
 	 * @since  0.1.0
 	 */
 	function add_options_page_metabox() {
+		return;
 
 		$cmb = new_cmb2_box( array(
 			'id'      => $this->metabox_id,
