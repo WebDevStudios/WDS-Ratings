@@ -9,19 +9,13 @@ class WDS_Ratings_Admin {
  	 * Option key, and option page slug
  	 * @var string
  	 */
-	private $key = 'wds_ratings';
+	private $key = 'wds_ratings_settings';
 
 	/**
  	 * Options page metabox id
  	 * @var string
  	 */
 	private $metabox_id = 'wds-ratings';
-
-	/**
-	 * Array of metaboxes/fields
-	 * @var array
-	 */
-	protected $option_metabox = array();
 
 	/**
 	 * Options Page title
@@ -43,36 +37,9 @@ class WDS_Ratings_Admin {
 		// Set our title
 		$this->title = __( 'WDS Ratings Options', 'wds_ratings' );
 
-		// Set our CMB2 fields
-		$this->fields = array(
-			array(
-				'name' => __( 'Filter Type', 'wds_ratings' ),
-				'desc' => __( 'If exclusive, the ratings will not available on posts added to the WDS Ratings filter. <br /> If inclusive, ratings will not available on posts added to the WDS Ratings filter.', 'wds_ratings' ),
-				'id'   => 'filter_type',
-				'type' => 'select',
-				'options' => array(
-					'off' => __( 'Off', 'wds_ratings' ),
-					'exclusive'   => __( 'Exclusive', 'wds_ratings' ),
-					'inclusive'     => __( 'Inclusive', 'wds_ratings' ),
-				),
-			),
-			array(
-				'name' => __( 'Enable Content Filter', 'cmb2' ),
-				'desc' => __( 'Add ratings before post content', 'wds_ratings' ),
-				'id'   => 'enable_content_filter',
-				'type' => 'checkbox',
-			),
-			array(
-				'name' => __( 'Enable Widget', 'cmb2' ),
-				//'desc' => __( 'field description (optional)', 'wds_ratings' ),
-				'id'   => 'enable_widget',
-				'type' => 'checkbox',
-			),
-		);
-
 		add_action( 'admin_init', array( $this, 'init' ) );
 		add_action( 'admin_menu', array( $this, 'add_options_page' ) );
-		add_filter( 'cmb2_meta_boxes', array( $this, 'add_options_page_metabox' ) );
+		add_filter( 'cmb2_init', array( $this, 'add_options_page_metabox' ) );
 	}
 
 	/**
@@ -113,31 +80,45 @@ class WDS_Ratings_Admin {
 	/**
 	 * Add the options metabox to the array of metaboxes
 	 * @since  0.1.0
-	 * @param  array $meta_boxes
-	 * @return array $meta_boxes
 	 */
-	function add_options_page_metabox( array $meta_boxes ) {
-		$meta_boxes[] = $this->option_metabox();
+	function add_options_page_metabox() {
 
-		return $meta_boxes;
-	}
-
-	/**
-	 * Defines the theme option metabox and field configuration
-	 * @since  0.1.0
-	 * @return array
-	 */
-	public function option_metabox() {
-		return array(
+		$cmb = new_cmb2_box( array(
 			'id'      => $this->metabox_id,
-			'fields'  => $this->fields,
 			'hookup'  => false,
 			'show_on' => array(
-				// These are important, don't remove
 				'key'   => 'options-page',
 				'value' => array( $this->key, )
 			),
-		);
+		) );
+
+		// Set our CMB2 fields
+
+		$cmb->add_field( array(
+			'name' => __( 'Filter Type', 'wds_ratings' ),
+			'desc' => __( 'If exclusive, the ratings will not available on posts added to the WDS Ratings filter. <br /> If inclusive, ratings will not available on posts added to the WDS Ratings filter.', 'wds_ratings' ),
+			'id'   => 'filter_type',
+			'type' => 'select',
+			'options' => array(
+				'off'       => __( 'Off', 'wds_ratings' ),
+				'exclusive' => __( 'Exclusive', 'wds_ratings' ),
+				'inclusive' => __( 'Inclusive', 'wds_ratings' ),
+			),
+		) );
+
+		$cmb->add_field( array(
+			'name' => __( 'Enable Content Filter', 'cmb2' ),
+			'desc' => __( 'Add ratings before post content', 'wds_ratings' ),
+			'id'   => 'enable_content_filter',
+			'type' => 'checkbox',
+		) );
+
+		$cmb->add_field( array(
+			'name' => __( 'Enable Widget', 'cmb2' ),
+			'id'   => 'enable_widget',
+			'type' => 'checkbox',
+		) );
+
 	}
 
 	/**
@@ -148,25 +129,11 @@ class WDS_Ratings_Admin {
 	 */
 	public function __get( $field ) {
 		// Allowed fields to retrieve
-		if ( in_array( $field, array( 'key', 'metabox_id', 'fields', 'title', 'options_page' ), true ) ) {
+		if ( in_array( $field, array( 'key', 'metabox_id', 'title', 'options_page' ), true ) ) {
 			return $this->{$field};
-		}
-
-		if ( 'option_metabox' === $field ) {
-			return $this->option_metabox();
 		}
 
 		throw new Exception( 'Invalid property: ' . $field );
 	}
 
-}
-
-/**
- * Wrapper function around cmb2_get_option
- * @since  0.1.0
- * @param  string  $key Options array key
- * @return mixed        Option value
- */
-function wds_ratings_get_option( $key = '' ) {
-	return cmb2_get_option( wds_ratings()->admin->key, $key );
 }

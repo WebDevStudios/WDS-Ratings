@@ -23,14 +23,16 @@ class WDS_Ratings {
 	 */
 	const DB_VERSION = '0.1.0';
 
+	public $ratings_table = 'wds_ratings';
 	public $url;
 	public $path;
 	public $name;
+	public $admin;
+	public $metabox;
+	public $ajax;
 
-	private $options;
-
+	protected $options;
 	protected static $single_instance = null;
-	public $ratings_table   = 'wds_ratings';
 
 	/**
 	 * Creates or returns an instance of this class.
@@ -54,9 +56,6 @@ class WDS_Ratings {
 		$this->url  = trailingslashit( plugin_dir_url( __FILE__ ) );
 		$this->path = trailingslashit( dirname( __FILE__ ) );
 		$this->name = __( 'WDS Ratings', 'wds_ratings' );
-
-		// Set the options
-		$this->options = get_option( 'wds_ratings_settings' );
 	}
 
 	/**
@@ -263,7 +262,7 @@ class WDS_Ratings {
 	 * @return mixed  Cache results
 	 */
 	public function update_user_post_rating_cache( $user_id, $post_id, $rating ) {
-		return wp_cache_set( $this->get_user_post_cache_key( $user_id, $post_id ), $rating, 'wds_ratings', 8 * HOUR_IN_SECONDS ) ) {
+		return wp_cache_set( $this->get_user_post_cache_key( $user_id, $post_id ), $rating, 'wds_ratings', 8 * HOUR_IN_SECONDS );
 	}
 
 	/**
@@ -274,7 +273,7 @@ class WDS_Ratings {
 	 * @return mixed  Cache results
 	 */
 	public function get_user_post_rating_cache( $user_id, $post_id ) {
-		return wp_cache_get( $this->get_user_post_cache_key( $user_id, $post_id ), 'wds_ratings' ) ) {
+		return wp_cache_get( $this->get_user_post_cache_key( $user_id, $post_id ), 'wds_ratings' );
 	}
 
 	/**
@@ -372,7 +371,7 @@ class WDS_Ratings {
 	public function fetch_option( $key ) {
 		// Are options already set?
 		if ( empty( $this->options ) ) {
-			$this->options = get_option( 'wds_ratings' );
+			$this->options = get_option( $this->admin->key );
 		}
 
 		// Does the key exist?
