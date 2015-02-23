@@ -5,16 +5,12 @@ class WDS_Ratings_Ajax {
 	/**
 	 * Setup our class
 	 * @since  0.1.0
-	 * @access public
 	 */
-	public function __construct( $wds_ratings ) {
-		$this->wds_ratings = $wds_ratings;
-	}
+	public function __construct() {}
 
 	/**
 	 * Handle a user's rating
 	 * @since  0.1.0
-	 * @access public
 	 */
 	public function post_user_rating() {
 		$security_check_passes = (
@@ -29,11 +25,11 @@ class WDS_Ratings_Ajax {
 		}
 
 		global $wpdb;
-		$ratings_table = $wpdb->prefix . $this->wds_ratings->ratings_table;
+		$ratings_table = $wpdb->prefix . wds_ratings()->ratings_table;
 
-		$post_id = $_POST['post_id'];
-		$user_id = $_POST['user_id'];
-		$rating  = $_POST['rating'];
+		$post_id = absint( $_POST['post_id'] );
+		$user_id = absint( $_POST['user_id'] );
+		$rating  = absint( $_POST['rating'] );
 
 		$post_ratings_users   = get_post_meta( $post_id, '_wds_ratings_users', true );
 		$post_ratings_score   = get_post_meta( $post_id, '_wds_ratings_score', true );
@@ -46,7 +42,7 @@ class WDS_Ratings_Ajax {
 
 		$post = get_post( $post_id );
 
-		$old_user_rating = $this->wds_ratings->get_user_rating( $user_id, $post_id );
+		$old_user_rating = wds_ratings()->get_user_rating( $user_id, $post_id );
 
 		// Is this a new rating for this user?
 		if ( ! $old_user_rating ) {
@@ -84,17 +80,14 @@ class WDS_Ratings_Ajax {
 					userid = %d
 				AND
 					postid = %d
-				", $rating, $user_id, $post_id );
+				", $rating, $user_id, $post_id
+			);
 
-
-			# Do the query and check for errors
+			// Do the query and check for errors
 			if ( false === $wpdb->query( $query ) ) {
-				if( isset( $wp_error ) )
-					return new WP_Error(
-						'db_query_error',
-						__( 'Could not execute query' ),
-						$wpdb->last_error
-					);
+				if ( isset( $wp_error ) ) {
+					wp_send_json_error( $wpdb->last_error );
+				}
 			}
 
 			// update the post's rating data
@@ -114,9 +107,8 @@ class WDS_Ratings_Ajax {
 	/**
 	 * Get the user's IP address
 	 * @since  0.1.0
-	 * @access private static
 	 */
-	private static function get_user_ip() {
+	protected static function get_user_ip() {
 		if ( empty( $_SERVER["HTTP_X_FORWARDED_FOR"] ) ) {
 			$ip_address = $_SERVER["REMOTE_ADDR"];
 		} else {
