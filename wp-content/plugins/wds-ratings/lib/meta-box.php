@@ -2,13 +2,14 @@
 if ( ! class_exists( 'WDS_Ratings_Meta_Box' ) ) :
 
 class WDS_Ratings_Meta_Box {
+
 	/**
 	 * Setup our class
 	 * @since  0.1.0
 	 * @access public
 	 */
 	public function __construct() {
-		add_filter( 'cmb2_meta_boxes', array( $this, 'add_metabox' ) );
+		add_action( 'cmb2_init', array( $this, 'register_metabox' ) );
 	}
 
 	/**
@@ -16,30 +17,23 @@ class WDS_Ratings_Meta_Box {
 	 * @since  0.1.0
 	 * @access public
 	 */
-	public function add_metabox( array $meta_boxes ) {
+	public function register_metabox() {
 		// Start with an underscore to hide fields from custom fields list
 		$prefix = '_wds_ratings_';
 
-		/**
-		 * Sample metabox to demonstrate each field type included
-		 */
-		$meta_boxes['wds_ratings_metabox'] = array(
-			'id'            => 'wds_ratings_metabox',
-			'title'         => 'WDS Ratings',
+		$cmb = new_cmb2_box( array(
+			'id'            => $prefix . 'metabox',
+			'title'         => __( 'WDS Ratings', 'wds_ratings' ),
 			'object_types'  => array( 'page', 'post' ), // Post type
 			'context'       => 'side',
-			'priority'      => 'high',
-			'show_names'    => true,
-			'fields'        => array(
-				array(
-					'name' => $this->filter_label(),
-					'id'   => $prefix . 'filter',
-					'type' => 'checkbox',
-				),
-			),
-		);
+		) );
 
-		return $meta_boxes;
+		$cmb->add_field( array(
+			'name' => $this->filter_label(),
+			'id'   => $prefix . 'filter',
+			'type' => 'checkbox',
+		) );
+
 	}
 
 	public function filter_label() {
