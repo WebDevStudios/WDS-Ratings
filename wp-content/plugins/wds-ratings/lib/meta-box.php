@@ -46,16 +46,17 @@ class WDS_Ratings_Meta_Box {
 		$type = WDS_Ratings::fetch_option( 'filter_type' );
 
 		switch ( $type ) {
-		case 'inclusive':
-			$label = __( 'Allow Ratings', 'wds_ratings' );
-			break;
+			case 'inclusive':
+				$label = __( 'Allow Ratings', 'wds_ratings' );
+				break;
 
-		case 'exclusive':
-			$label = __( 'Do NOT Allow Ratings', 'wds_ratings' );
-			break;
+			case 'exclusive':
+				$label = __( 'Do NOT Allow Ratings', 'wds_ratings' );
+				break;
 
-		default:
-			$label = __( 'No filter type selected.', 'wds_ratings' );
+			default:
+				$label = __( 'No filter type selected.', 'wds_ratings' );
+				break;
 		}
 
 		return $label;
