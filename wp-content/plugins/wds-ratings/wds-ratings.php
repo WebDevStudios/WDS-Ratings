@@ -71,13 +71,8 @@ class WDS_Ratings {
 		$this->admin = new WDS_Ratings_Admin;
 
 		// create meta box for posts
-		if (
-			( 'off' !== $this->fetch_option( 'filter_type' ) )
-			&& ( false != $this->fetch_option( 'filter_type' ) )
-		) {
-			require_once( $this->path . 'lib/meta-box.php' );
-			$this->metabox = new WDS_Ratings_Meta_Box();
-		}
+		require_once( $this->path . 'lib/meta-box.php' );
+		$this->metabox = new WDS_Ratings_Meta_Box();
 
 		require_once( $this->path  . 'lib/ajax.php' );
 		$this->ajax = new WDS_Ratings_Ajax();
@@ -93,7 +88,7 @@ class WDS_Ratings {
 		add_action( 'wp_ajax_nopriv_wds_ratings_post_user_rating', array( $this->ajax, 'post_user_rating' ) );
 
 		// Cache
-		add_action( 'wds_rate_post', array( $this, 'update_user_post_rating_cache' ) );
+		add_action( 'wds_rate_post', array( $this, 'update_user_post_rating_cache' ), 10, 3 );
 
 		// add content filter if enabled
 		if ( 'on' === $this->fetch_option( 'enable_content_filter' ) ) {
@@ -188,12 +183,30 @@ class WDS_Ratings {
 			$data['user_rating'] = $user_rating;
 		}
 
-		ob_start();
-		extract( $data );
-		include( $this->path . 'lib/stars-template.php' );
-		$ratings_template = ob_get_clean();
 
-		return $ratings_template;
+		$star_rows = '';
+		for ( $number_stars = 5; $number_stars > 0; $number_stars-- ) {
+			$star_rows .= '<div class="wds-ratings-stars" data-stars="'. $number_stars .'">';
+			for ( $i = 1; $i <= $number_stars; $i++ ) {
+				$star_rows .= '<span class="star-'. $i .'">&#x2605;</span>';
+			}
+			$star_rows .= '</div>';
+		}
+
+		$ratings_template = '
+		<div id="star-rating-'. absint( $post_id ) .'" class="wds-ratings" data-rating="'. absint( $post_rating ) .'" data-userrating="'. absint( $user_rating ) .'" data-postid="'. absint( $post_id ) .'">
+			<div class="wds-ratings-inner-wrap">
+				<div>
+					'. $star_rows .'
+				</div>
+			</div>
+		</div>
+		';
+
+		// Make sure css/js is enqueued if not already
+		$this->enqueue();
+
+		return apply_filters( 'wds_ratings_template', $ratings_template, $post_id, $user_id, $post_rating, $user_rating );
 	}
 
 	/**
@@ -207,23 +220,15 @@ class WDS_Ratings {
 			return true;
 		}
 
-		// fallback
-		if ( is_null( $post_id ) ) {
-			$post_id = get_the_ID();
-		}
+		$post_id  = is_null( $post_id ) ? get_the_ID() : $post_id;
 
-		$is_added = 'on' === get_post_meta( $post_id, '_wds_ratings_added_to_filter', true ) ? true : false;
-		$filter = $this->fetch_option( 'filter_type' );
+		$is_added = 'on' == get_post_meta( $post_id, '_wds_ratings_added_to_filter', true );
+		$filter   = $this->fetch_option( 'filter_type' );
 
 		// Are ratings allowed on this post?
-		if (
-			( 'exclusive' === $filter && ! $is_added )
-			|| ( 'inclusive' === $filter && $is_added )
-		) {
-			return true;
-		} else {
-			return false;
-		}
+		$allowed = ( 'exclusive' == $filter && ! $is_added ) || ( 'inclusive' == $filter && $is_added );
+
+		return apply_filters( 'wds_ratings_allowed_on_post', $allowed, $post_id );
 	}
 
 	/**
@@ -235,22 +240,23 @@ class WDS_Ratings {
 		global $wpdb;
 
 		// Check if we've cached the user's rating for the day
-		if ( $rating = $this->get_user_post_rating_cache( $user_id, $post_id ) ) {
-			return $rating;
+		$rating = $this->get_user_post_rating_cache( $user_id, $post_id );
+
+		if ( ! $rating ) {
+
+			$ratings_table = $wpdb->prefix . $this->ratings_table;
+			$sql = $wpdb->prepare( "SELECT * FROM `{$ratings_table}` WHERE `userid` = %d AND `postid` = %d", $user_id, $post_id );
+			$results = $wpdb->get_results( $sql );
+
+			$rating = ! empty( $results ) && is_array( $results )
+				? intval( $results[0]->rating )
+				: false;
+
+			// Cache rating for a day
+			$this->update_user_post_rating_cache( $user_id, $post_id, $rating );
 		}
 
-		$ratings_table = $wpdb->prefix . $this->ratings_table;
-		$sql = $wpdb->prepare( "SELECT * FROM `{$ratings_table}` WHERE `userid` = %d AND `postid` = %d", $user_id, $post_id );
-		$results = $wpdb->get_results( $sql );
-
-		$rating = ! empty( $results ) && is_array( $results )
-			? intval( $results[0]->rating )
-			: false;
-
-		// Cache rating for a day
-		$this->update_user_post_rating_cache( $user_id, $post_id, $rating );
-
-		return $rating;
+		return apply_filters( 'wds_rating_user_rating', $rating, $user_id, $post_id  );
 	}
 
 	/**
