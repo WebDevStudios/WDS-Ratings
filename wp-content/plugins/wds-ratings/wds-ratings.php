@@ -81,7 +81,7 @@ class WDS_Ratings {
 		register_activation_hook( __FILE__, array( $this, 'activation' ) );
 
 		// Add JS and CSS to head
-		add_action( 'wp_head', array( $this, 'do_wds_ratings' ), 1 );
+		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue' ) );
 
 		// AJAX
 		add_action( 'wp_ajax_wds_ratings_post_user_rating', array( $this->ajax, 'post_user_rating' ) );
@@ -114,35 +114,25 @@ class WDS_Ratings {
 	 * @since  0.1.0
 	 * @return bool
 	 */
-	public function do_wds_ratings() {
-		if ( $this->is_allowed_on_post() ) {
-			// CSS
-			//wp_enqueue_style( 'wds-ratings', $this->url . 'wds-ratings.css' );
-
-			// JS
-			wp_enqueue_script( 'wds-ratings', $this->url . 'wds-ratings.js', array( 'jquery' ) );
-			wp_localize_script( 'wds-ratings', 'wds_ratings_config', $this->compile_js_data() );
-
-			return true;
+	public function enqueue() {
+		if ( ! $this->is_allowed_on_post() ) {
+			return false;
 		}
 
-		return false;
-	}
+		if ( apply_filters( 'wds_ratings_css', true ) ) {
+			wp_enqueue_style( 'wds-ratings', $this->url . 'wds-ratings.css' );
+		}
 
-	/**
-	 * JS data we want to localize
-	 * @since  0.1.0
-	 * @return array $js_data
-	 */
-	protected function compile_js_data() {
-		return array(
+		wp_enqueue_script( 'wds-ratings', $this->url . 'wds-ratings.js', array( 'jquery' ) );
+		wp_localize_script( 'wds-ratings', 'wds_ratings_config', array(
 			'ajaxurl'   => admin_url( 'admin-ajax.php' ),
-			//'post_id' => $post->ID,
 			'user_id'   => get_current_user_id(),
 			'nonce'     => wp_create_nonce( 'wds-ratings-nonce' ),
 			'debug'     => defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG,
 			'no_auth_alert' => __( 'You must be logged in to rate an article', 'wds_ratings' ),
-		);
+		) );
+
+		return true;
 	}
 
 	/**
