@@ -6,7 +6,6 @@ class WDS_Ratings_Meta_Box {
 	/**
 	 * Setup our class
 	 * @since  0.1.0
-	 * @access public
 	 */
 	public function __construct() {
 		add_action( 'cmb2_init', array( $this, 'register_metabox' ) );
@@ -15,7 +14,6 @@ class WDS_Ratings_Meta_Box {
 	/**
 	 * Add the metabox
 	 * @since  0.1.0
-	 * @access public
 	 */
 	public function register_metabox() {
 		// Start with an underscore to hide fields from custom fields list
@@ -26,10 +24,11 @@ class WDS_Ratings_Meta_Box {
 			'title'         => __( 'WDS Ratings', 'wds_ratings' ),
 			'object_types'  => array( 'page', 'post' ), // Post type
 			'context'       => 'side',
+			'show_names' => false,
 		) );
 
 		$cmb->add_field( array(
-			'name' => $this->filter_label(),
+			'desc' => $this->filter_label(),
 			'id'   => $prefix . 'filter',
 			'type' => 'checkbox',
 		) );
@@ -37,19 +36,22 @@ class WDS_Ratings_Meta_Box {
 	}
 
 	public function filter_label() {
-		$type = WDS_Ratings::fetch_option( 'filter_type' );
 
-		switch ( $type ) {
+		if ( ! isset( $_GET['post'] ) && ! isset( $_GET['post_type'] ) ) {
+			$label = __( 'Post' );
+		} else {
+			$pt = isset( $_GET['post_type'] ) ? $_GET['post_type'] : get_post_type( $_GET['post'] );
+			$pt_object = get_post_type_object( $pt );
+			$label = $pt_object->labels->singular_name;
+		}
+
+		switch ( wds_ratings()->fetch_option( 'filter_type' ) ) {
 			case 'inclusive':
-				$label = __( 'Allow Ratings', 'wds_ratings' );
-				break;
-
-			case 'exclusive':
-				$label = __( 'Do NOT Allow Ratings', 'wds_ratings' );
+				$label = sprintf( __( 'Show Ratings on this %s', 'wds_ratings' ), $label );
 				break;
 
 			default:
-				$label = __( 'No filter type selected.', 'wds_ratings' );
+				$label = sprintf( __( 'Hide Ratings on this %s', 'wds_ratings' ), $label );
 				break;
 		}
 
@@ -57,7 +59,5 @@ class WDS_Ratings_Meta_Box {
 	}
 
 }
-
-$GLOBALS['WDS_Ratings_Meta_Box'] = new WDS_Ratings_Meta_Box;
 
 endif;

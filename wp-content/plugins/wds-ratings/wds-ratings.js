@@ -1,4 +1,4 @@
-var StarRatings = (function(window, document, $, undefined){
+window.StarRatings = (function(window, document, $, undefined){
 	'use strict';
 
 	var l10n = window.wds_ratings_config;
@@ -15,12 +15,12 @@ var StarRatings = (function(window, document, $, undefined){
 	app.init = function() {
 		$.extend( app, l10n );
 
-		$( '.stars-ratings' )
+		$( '.wds-ratings' )
 			.each( app.handleRatingForSection )
-			.find( '.stars' )
-			.on( 'mouseover', app.handleHover )
-			.on( 'mouseleave', app.handleOffHover )
-			.on( 'click', app.handleClickRating );
+			.find( '.wds-ratings-stars' )
+				.on( 'mouseover', app.handleHover )
+				.on( 'mouseleave', app.handleOffHover )
+				.on( 'click', app.handleClickRating );
 	};
 
 	app.handleRatingForSection = function() {
@@ -45,12 +45,12 @@ var StarRatings = (function(window, document, $, undefined){
 	};
 
 	app.handleRating = function( rating, id, isUserrating ) {
-		var ceil = Math.ceil( rating );
-		var floor = Math.floor( rating );
+		var ceil    = Math.ceil( rating );
+		var floor   = Math.floor( rating );
 		var percent = rating - floor;
 
 		// Remove previous css block for handling percentage stars
-		$( '.stars', '#'+ id ).removeClass( 'current-rating user-current-rating' ).find( '.percent' ).removeClass( 'percent' );
+		$( '.wds-ratings-stars', '#'+ id ).removeClass( 'current-rating user-current-rating' ).find( '.wds-ratings-percent' ).removeClass( 'wds-ratings-percent' );
 		$( document.getElementById( id +'-star-percent-style' ) ).remove();
 
 		// Add current rating
@@ -60,39 +60,47 @@ var StarRatings = (function(window, document, $, undefined){
 
 		if ( percent ) {
 			// Get star which needs percentage shown
-			var $percent_star = app.$stars[ id ][ ceil ].find( '.star-'+ ceil ).addClass( 'percent' );
+			var $percent_star = app.$stars[ id ][ ceil ].find( '.star-'+ ceil ).addClass( 'wds-ratings-percent' );
 			// Set width of before attribute to percentage of star
-			app.$currRating.append('<style id="'+ id +'-star-percent-style">#'+ id +' .percent:before { width: '+ (percent * 100) +'%;}</style>');
+			app.$currRating.append('<style id="'+ id +'-star-percent-style">#'+ id +' .wds-ratings-percent:before { width: '+ (percent * 100) +'%;}</style>');
 		}
 	};
 
 	app.handleHover = function( evt ) {
 		var $this = $(this);
 		var rating = $this.data( 'stars' );
-		var id = $this.parents( '.stars-ratings' ).attr( 'id' );
+		var id = $this.parents( '.wds-ratings' ).attr( 'id' );
 
 		for (var i = rating; i >= 0; i--) {
-			app.$stars[id][i].addClass( 'active' );
+			app.$stars[id][i].addClass( 'wds-ratings-active' );
 		}
 	};
 
 	app.handleOffHover = function( evt ) {
-		$(this).parents( '.stars-ratings' ).find( '.stars' ).removeClass( 'active' );
+		$(this).parents( '.wds-ratings' ).find( '.wds-ratings-stars' ).removeClass( 'wds-ratings-active' );
 	};
 
 	app.handleClickRating = function( evt ) {
 		var $this = $(this);
 		var userRating = $this.data( 'stars' );
-		app.$currRating = $this.parents( '.stars-ratings' );
+		app.$currRating = $this.parents( '.wds-ratings' );
 		var id = app.$currRating.attr( 'id' );
-		
+		var rating = app.$currRating.data( 'rating' );
+
 		// return early if user is not logged in
 		if ( parseInt(app.user_id) < 1) {
 			alert(l10n.no_auth_alert);
 			return;
 		}
 
-		app.post_id = app.$currRating.data( 'post_id' );
+		app.post_id = app.$currRating.data( 'postid' );
+
+		app.$currRating.data( 'userrating', userRating ).addClass( 'has-user-rating' );
+
+		// Handle the rating styling
+		app.handleRating( userRating, id, true );
+
+		$this.trigger( 'mouseleave' );
 
 		var data = {
 			'action' : 'wds_ratings_post_user_rating',
@@ -102,29 +110,40 @@ var StarRatings = (function(window, document, $, undefined){
 			'user_id' : app.user_id,
 		};
 
+		var fail = function( response ) {
+			app.log( 'Something went wrong!', response );
+
+			app.$currRating.removeClass( 'has-user-rating' );
+
+			// Handle the rating styling
+			app.handleRating( rating, id, true );
+
+			$this.trigger( 'mouseleave' );
+		};
+
 		$.ajax({
 			'type' : 'POST',
 			'url' : app.ajaxurl,
 			'dataType' : 'JSON',
 			'data' : data,
 			'success' : function( response ) {
+
 				if ( response.success ) {
-					app.log( 'W00t!', response );
-
-					// var rating = app.$currRating.data( 'rating' );
-					app.$currRating.data( 'userrating', userRating ).addClass( 'has-user-rating' );
-
-					// Handle the rating styling
-					app.handleRating( userRating, id, true );
-
-					$this.trigger( 'mouseleave' );
-				} else {
-					app.log( 'Something went wrong!', response );
+					return app.log( 'W00t!', response );
 				}
+
+				fail( response );
+			},
+			'error' : function( jqXHR, textStatus, errorThrown ) {
+				fail( {
+					'jqXHR'       : jqXHR,
+					'textStatus'  : textStatus,
+					'errorThrown' : errorThrown
+				} );
 			}
 		});
 
-  	};
+	};
 
   	$(document).ready( app.init );
 
