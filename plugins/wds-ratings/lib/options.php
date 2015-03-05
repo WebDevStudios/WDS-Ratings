@@ -35,7 +35,7 @@ class WDS_Ratings_Admin {
 	 */
 	public function __construct() {
 		// Set our title
-		$this->title = __( 'WDS Ratings Options', 'wds_ratings' );
+		$this->title = __( 'Ratings Options', 'wds_ratings' );
 
 		add_action( 'admin_init', array( $this, 'init' ) );
 		add_action( 'admin_menu', array( $this, 'add_options_page' ) );
@@ -55,7 +55,8 @@ class WDS_Ratings_Admin {
 	 * @since 0.1.0
 	 */
 	public function add_options_page() {
-		$this->options_page = add_menu_page(
+		$this->options_page = add_submenu_page(
+			'options-general.php',
 			$this->title,
 			$this->title,
 			'manage_options',
