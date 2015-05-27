@@ -78,7 +78,7 @@ class WDS_Ratings {
 		add_action( 'init', array( $this, 'init' ) );
 		register_activation_hook( __FILE__, array( $this, 'activation' ) );
 
-		// Add JS and CSS to head
+		// Add JS to the footer and CSS to head
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue' ) );
 
 		// AJAX
@@ -121,7 +121,7 @@ class WDS_Ratings {
 			wp_enqueue_style( 'wds-ratings', $this->url . 'wds-ratings.css' );
 		}
 
-		wp_enqueue_script( 'wds-ratings', $this->url . 'wds-ratings.js', array( 'jquery' ) );
+		wp_enqueue_script( 'wds-ratings', $this->url . 'wds-ratings.js', array( 'jquery' ), '05272015', true );
 		wp_localize_script( 'wds-ratings', 'wds_ratings_config', array(
 			'ajaxurl'   => admin_url( 'admin-ajax.php' ),
 			'user_id'   => get_current_user_id(),
