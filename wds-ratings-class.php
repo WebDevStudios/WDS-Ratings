@@ -1,14 +1,4 @@
 <?php
-/**
- * Plugin Name: WDS Ratings
- * Description: Allow users to rate posts
- * Version:     0.4.0
- * Author:      WebDevStudios
- * Author URL:  http://webdevstudios.com
- * Text Domain: wds_ratings
- * Domain Path: /languages
- */
-
 class WDS_Ratings {
 
 	/**
