@@ -147,7 +147,10 @@ class WDS_Ratings {
 		$user_id = get_current_user_id();
 
 		$post_rating = $this->get_post_average( $post_id );
-		$user_rating = $this->get_user_rating( $user_id, $post_id );
+		// only get rating for valid user id
+		if ( $user_id > 0 ) {
+			$user_rating = $this->get_user_rating( $user_id, $post_id );
+		}
 
 		// round the rating to nearest .5
 		$rounded_rating = round( $post_rating * 2, 0 ) / 2;
