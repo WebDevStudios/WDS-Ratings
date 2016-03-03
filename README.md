@@ -1,5 +1,5 @@
 # WDS Ratings
-**Contributors:** WebDevStudios
+**Contributors:** WebDevStudios  
 **Tags:** ratings  
 
 Users can rate posts on your WP site.
