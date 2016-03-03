@@ -14,3 +14,11 @@ Based on [WP-PostRatings](https://wordpress.org/plugins/wp-postratings/) plugin 
 2. Add the 'wds_post_ratings' action wherever you want ratings to appear in your template.
 	`<?php do_action( 'wds_post_ratings', true ); ?>`
 3. Options can be configured in Settings > Ratings Options.
+
+## Screenshots ##
+
+1. No Rating
+![No Rating](https://raw.githubusercontent.com/WebDevStudios/WDS-Ratings/master/screenshot-1.png)
+
+2. With Rating
+![With Rating](https://raw.githubusercontent.com/WebDevStudios/WDS-Ratings/master/screenshot-2.png)
